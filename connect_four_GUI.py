@@ -3,6 +3,7 @@
 import pygame
 import connect_four as cf
 import numpy as np
+import random
 
 pygame.init()
 
@@ -59,6 +60,13 @@ def getCol(x):
     for i in range(7):
         if x > (screenWidth - boardWidth)/2 + gapSize + coinRadius + i*(2*coinRadius + gapSize) - coinRadius - gapSize/2 and x < (screenWidth - boardWidth)/2 + gapSize + coinRadius + i*(2*coinRadius + gapSize) + coinRadius + gapSize/2:
             return i
+
+def coin_animation(win, x, color):
+    pygame.draw.rect(win, BLACK, ((0,((screenHeight - boardHeight)*2//3 - 2*coinRadius - 10), screenWidth, 2*coinRadius + 10)))
+    pygame.draw.circle(win, color, (x,(screenHeight - boardHeight)*2//3 - coinRadius - 5), coinRadius-2)
+    pygame.display.update()
+
+    
 refBoard = cf.create_board()
 playerColours = [RED, YELLOW]
 gameBoard = Board((screenWidth - boardWidth)/2, (screenHeight - boardHeight)*2/3, boardWidth, boardHeight, NAVYBLUE)
@@ -69,11 +77,13 @@ vsComputer = int(input("vs PLAYER(1) / vs COMPUTER(2) ? : ")) - 1
 startWin = pygame.display.set_mode((screenWidth,screenHeight))
 pygame.display.set_caption("ConnectFour")
 
+
+
 startupDraw(startWin, gameBoard)
 turn = 0
 gameover = False
 while not gameover:
-    pygame.time.delay(100)
+    pygame.time.delay(10)
     
     pygame.display.update()
 
@@ -84,8 +94,10 @@ while not gameover:
         if vsComputer:
             if turn == 0:
                 mouseClick = pygame.mouse.get_pressed()
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                coin_animation(startWin, mouse_x, playerColours[turn])
                 if mouseClick[0] == 1:
-                    mouse_x, mouse_y = pygame.mouse.get_pos()
+                    pygame.draw.rect(startWin, BLACK, ((0,((screenHeight - boardHeight)*2//3 - 2*coinRadius - 10), screenWidth, 2*coinRadius + 10)))
                     col = getCol(mouse_x)
                     if cf.check_column(refBoard, col):
                         row = cf.last_row(refBoard, col)
@@ -105,14 +117,30 @@ while not gameover:
                     turn %= 2
 
             else:
-                print("UnderConstruction!")
+                score ,col = cf.miniMax(refBoard, 0, turn + 1)
+                # col = random.randrange(0,7)
+                if cf.check_column(refBoard, col):
+                    row = cf.last_row(refBoard, col)
+                    tempRow, tempCol = cf.drop_coin(refBoard, row, col, turn + 1)
+                    gameRow, gameCol = convert_coordinates(tempRow, tempCol)
+                    coin_1 = Coin(gameCol, gameRow, playerColours[turn])
+                    coin_1.dropGameCoin(startWin)
+                else:
+                    continue
+
+                if cf.win_cond(refBoard, turn + 1):
+                    gameover = True
+                    pygame.display.update()
+                    print("COMPUTER Wins!!")
+
                 turn += 1
                 turn %= 2
 
         else:
             mouseClick = pygame.mouse.get_pressed()
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            coin_animation(startWin, mouse_x, playerColours[turn])
             if mouseClick[0] == 1:
-                mouse_x, mouse_y = pygame.mouse.get_pos()
                 col = getCol(mouse_x)
                 if cf.check_column(refBoard, col):
                     row = cf.last_row(refBoard, col)
@@ -126,7 +154,7 @@ while not gameover:
                 if cf.win_cond(refBoard, turn + 1):
                     gameover = True
                     pygame.display.update()
-                    print("PLAYER ", turn + 1, "Wins!!")
+                    print("PLAYER", turn + 1, "Wins!!")
 
                 turn += 1
                 turn %= 2
