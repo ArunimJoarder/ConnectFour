@@ -117,8 +117,7 @@ while not gameover:
                     turn %= 2
 
             else:
-                score ,col = cf.miniMax(refBoard, 0, turn + 1)
-                # col = random.randrange(0,7)
+                col = cf.move_selector(refBoard, 4, turn + 1, 'alphaBeta')
                 if cf.check_column(refBoard, col):
                     row = cf.last_row(refBoard, col)
                     tempRow, tempCol = cf.drop_coin(refBoard, row, col, turn + 1)
