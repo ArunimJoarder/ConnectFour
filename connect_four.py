@@ -181,7 +181,7 @@ def miniMax(board, depth, turn):
         return scoreSum
 
     if turn == 2:
-        best_value = -1*math.inf
+        best_value = -math.inf
         for i in range(No_COLUMN):
             if check_column(board, i):
                 board_test = deepcopy(board)
@@ -235,16 +235,16 @@ def alphaBeta(board, depth, alpha, beta, turn):
                 scores_2[i] = score(board, row_i, i, 2)
                 scores_1[i] = score(board, row_i, i, 1)
 
-        scores = scores_2 - scores_1
+        scores = scores_2 + scores_1
 
         scoreSum = 0
         for i in range(No_COLUMN):
             scoreSum += scores[i]
 
-        return scoreSum
+        return (-1**turn)*scoreSum
 
     if turn == 2:
-        best_value = -1*math.inf
+        best_value = -math.inf
         
         for i in range(No_COLUMN):
             if check_column(board, i):
@@ -285,7 +285,7 @@ def alphaBeta(board, depth, alpha, beta, turn):
                 drop_coin(board_test, row_i, i, turn)
                 
                 if win_cond(board_test, 1):
-                    return -1*math.inf
+                    return -math.inf
                 else:   
                     value = alphaBeta(board_test, depth - 1, alpha, beta, 2)
 
@@ -294,7 +294,7 @@ def alphaBeta(board, depth, alpha, beta, turn):
 
                 beta = min(beta, value)
 
-                if beta <= alpha:
+                if alpha >= beta:
                     break
 
         return best_value
@@ -306,7 +306,7 @@ def move_selector(board, depth, turn, type):
             board_test = deepcopy(board)
             row_i = last_row(board_test, i)
             drop_coin(board_test, row_i, i, turn)
-            if type == 'alphaBeta':
+            if type == 'AB':
                 choices[i] = alphaBeta(board_test, depth - 1, -math.inf, math.inf, 1)
             else:
                 choices[i] = miniMax(board_test, depth - 1, 1)
@@ -316,6 +316,8 @@ def move_selector(board, depth, turn, type):
         move = numpy.where(numpy.array(choices) == max_score)
         move = random.choice(move)
         move = random.choice(move)
+        print(choices)
+        print(move, '\n')
         
         if check_column(board, move):
             return move
