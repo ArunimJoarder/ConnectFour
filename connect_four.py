@@ -63,6 +63,12 @@ def win_cond(board, coin_type):
                 pass
     return False
 
+def checkDraw(board):
+    for i in range(No_COLUMN):
+        if check_column(board, i):
+            return 0
+    return 1
+
 def score(board,row, column, coin_type):
     count_hor = 0
     count_ver = 0
@@ -178,7 +184,7 @@ def miniMax(board, depth, turn):
         for i in range(No_COLUMN):
             scoreSum += scores[i]
 
-        return scoreSum
+        return (-1**turn)*scoreSum
 
     if turn == 2:
         best_value = -math.inf
@@ -298,26 +304,114 @@ def alphaBeta(board, depth, alpha, beta, turn):
                     break
 
         return best_value
-            
-def move_selector(board, depth, turn, type):
+        
+bestScore = -math.inf
+# bestMove = -1
+
+class samples:
+    def __init__(self):
+        self.NoSAMPLES = 100000
+        self.sampleCount = 0
+        self.bestScore = -math.inf
+
+    def check(self):
+        if self.sampleCount <= self.NoSAMPLES//7:
+            return 1
+        return 0
+
+    def reset(self):
+        self.bestScore = -math.inf
+        self.sampleCount = 0
+
+def monteCarlo(board, depth, turn, a):
+    if a.check():
+        if depth == 0:
+            a.sampleCount += 1
+            scores = numpy.zeros(No_COLUMN)
+            scores_1 = numpy.zeros(No_COLUMN)
+            scores_2 = numpy.zeros(No_COLUMN)
+            for i in range(No_COLUMN):
+                if check_column(board, i):
+                    row_i = last_row(board, i)
+                    scores_2[i] = score(board, row_i, i, 2)
+                    scores_1[i] = score(board, row_i, i, 1)
+
+            scores = scores_2 + scores_1
+
+            scoreSum = 0
+            for i in range(No_COLUMN):
+                scoreSum += scores[i]
+
+            return (-1**turn)*scoreSum
+        
+        elif turn == 2:
+            board_test = deepcopy(board)
+            while 1:
+                i = random.randrange(0, No_COLUMN)
+                
+                if check_column(board_test, i):
+                    row_i = last_row(board_test, i)
+                    if score(board_test, row_i, i, 1) >= 1000:
+                        return -math.inf
+
+                    drop_coin(board_test, row_i, i, turn)
+                    if win_cond(board_test, 2):
+                        return +math.inf
+                    else:
+                        value = monteCarlo(board_test, depth - 1, 1, a)
+
+                        if value > a.bestScore:
+                            a.bestScore = value
+                            # bestMove = move
+                return a.bestScore
+
+        elif turn == 1:
+            board_test = deepcopy(board)
+            while 1:
+                i = random.randrange(0, No_COLUMN)
+                
+                if check_column(board_test, i):
+                    row_i = last_row(board_test, i)
+                    if score(board_test, row_i, i, 2) >= 1000:
+                        return math.inf
+
+                    drop_coin(board_test, row_i, i, turn)
+                    if win_cond(board_test, 1):
+                        return -math.inf
+                    else:
+                        value = monteCarlo(board_test, depth - 1, 2, a)
+
+                        if value > a.bestScore:
+                            a.bestScore = value
+                            # bestMove = move
+                return a.bestScore
+    return a.bestScore
+
+def move_selector(board, depth, turn, Ptype):
     choices = numpy.zeros(No_COLUMN)
     for i in range(No_COLUMN):
         if check_column(board, i):
             board_test = deepcopy(board)
             row_i = last_row(board_test, i)
             drop_coin(board_test, row_i, i, turn)
-            if type == 'AB':
+            if Ptype == 'AB':
                 choices[i] = alphaBeta(board_test, depth - 1, -math.inf, math.inf, 1)
+            elif Ptype == 'MC':
+                a = samples()
+                choices[i] = monteCarlo(board_test, depth - 1, 1, a)
+                a.reset()
             else:
                 choices[i] = miniMax(board_test, depth - 1, 1)
+        else:
+            choices[i] = -math.inf
 
     while 1:
         max_score = boardScoreMax(choices)
         move = numpy.where(numpy.array(choices) == max_score)
         move = random.choice(move)
         move = random.choice(move)
-        print(choices)
-        print(move, '\n')
+        # print(choices)
+        # print(move, '\n')
         
         if check_column(board, move):
             return move

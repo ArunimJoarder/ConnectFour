@@ -84,6 +84,11 @@ def coin_animation(win, x, color, board):
 
 def firstWindow(win):
     win.blit(bg1, (0,0))
+    fontObj = pygame.font.Font('freesansbold.ttf', 50)
+    textSurfaceObj = fontObj.render('The Choice of Sophie', True,WHITE,bg1)
+    textRectObj = textSurfaceObj.get_rect()
+    textRectObj.center = (screenWidth/2, 50)
+    win.blit(textSurfaceObj, textRectObj)
     # pygame.draw.rect(win, YELLOW, (screenWidth / 4 - screenWidth / 6, screenHeight / 2 - screenHeight / 10, screenWidth / 3, screenHeight / 5))
     # pygame.draw.rect(win, RED, (3*screenWidth / 4 - screenWidth / 6, screenHeight / 2 - screenHeight / 10, screenWidth / 3, screenHeight / 5))
     win.blit(vsPBut, (screenWidth / 4 - 265//2, screenHeight / 2 - 300))
@@ -93,13 +98,13 @@ def lastWindow(win, winner, vsComp):
     win.blit(bg1, (0,0))
     fontObj = pygame.font.Font('freesansbold.ttf', 80)
     if winner == 1:
-        textSurfaceObj = fontObj.render('Player-1 WINS !!!!', True,WHITE,BLACK)
+        textSurfaceObj = fontObj.render('Player-1 WINS !!!!', True,WHITE,bg1)
     elif winner == 0 and vsComp == 0:
-        textSurfaceObj = fontObj.render('Player-2 WINS !!!!', True,WHITE,BLACK)
+        textSurfaceObj = fontObj.render('Player-2 WINS !!!!', True,WHITE,bg1)
     elif winner == 0 and vsComp == 1:
-        textSurfaceObj = fontObj.render('Computer WINS !!!!', True,WHITE,BLACK)
+        textSurfaceObj = fontObj.render('Computer WINS !!!!', True,WHITE,bg1)
     else:
-        textSurfaceObj = fontObj.render('DRAW', True,WHITE,BLACK)
+        textSurfaceObj = fontObj.render('DRAW', True,WHITE,bg1)
 
 
     textRectObj = textSurfaceObj.get_rect()
@@ -120,9 +125,16 @@ pygame.display.set_caption("ConnectFour")
 
 firstWindow(startWin)
 
+gameover = False
+quitFlag = 1
 vsComputer = -1
-while vsComputer == -1:
+draw = 0
+while vsComputer == -1 and not gameover:
     for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            gameover = True
+            quitFlag = 0
+        
         mouseClick = pygame.mouse.get_pressed()
         mouse_x, mouse_y = pygame.mouse.get_pos()
         # print(mouseClick)
@@ -136,11 +148,9 @@ while vsComputer == -1:
     # pygame.time.delay(500)
 
 # print(vsComp)
-
-startupDraw(startWin, gameBoard)
+if not gameover:
+    startupDraw(startWin, gameBoard)
 turn = 0
-gameover = False
-quitFlag = 1
 while not gameover:
     pygame.time.delay(10)
     
@@ -169,6 +179,13 @@ while not gameover:
                     else:
                         continue
 
+                    if cf.checkDraw(refBoard):
+                        gameover = True
+                        draw = 5
+                        pygame.display.update()
+                        print("DRAW")
+                        cf.print_board(refBoard)
+
                     if cf.win_cond(refBoard, turn + 1):
                         gameover = True
                         pygame.display.update()
@@ -180,7 +197,7 @@ while not gameover:
 
             else:
                 startupDraw(startWin, gameBoard)
-                col = cf.move_selector(refBoard, 6, turn + 1, 'AB')
+                col = cf.move_selector(refBoard, 5, turn + 1, 'AB')
                 if cf.check_column(refBoard, col):
                     row = cf.last_row(refBoard, col)
                     tempRow, tempCol = cf.drop_coin(refBoard, row, col, turn + 1)
@@ -190,7 +207,14 @@ while not gameover:
                     coin_animation(startWin, screenWidth // 2, playerColours[turn - 1], gameBoard)
                 else:
                     continue
-
+                
+                if cf.checkDraw(refBoard):
+                        gameover = True
+                        draw = 5
+                        pygame.display.update()
+                        print("DRAW")
+                        cf.print_board(refBoard)
+                     
                 if cf.win_cond(refBoard, turn + 1):
                     gameover = True
                     pygame.display.update()
@@ -216,6 +240,13 @@ while not gameover:
                 else:
                     continue
 
+                if cf.checkDraw(refBoard):
+                        gameover = True
+                        draw = 5
+                        pygame.display.update()
+                        print("DRAW")
+                        cf.print_board(refBoard)
+                
                 if cf.win_cond(refBoard, turn + 1):
                     gameover = True
                     pygame.display.update()
@@ -236,6 +267,10 @@ while not gameover:
 #     lastWindow(startWin, turn, vsComputer)
 #     if event == pygame.MOUSEBUTTONUP.:
 #         break
-lastWindow(startWin, turn, vsComputer)
-pygame.time.delay(500)
+if quitFlag:
+    if draw:
+        lastWindow(startWin, draw, vsComputer)
+    else:
+        lastWindow(startWin, turn, vsComputer)
+    pygame.time.delay(500)
 pygame.quit()
